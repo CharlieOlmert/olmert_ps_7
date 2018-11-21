@@ -9,7 +9,6 @@
 
 library(shiny)
 library(tidyverse)
-library(ggrepel)
 
 # reading in data from ps_7.rmd
 read_data <- read_rds("error_data")
@@ -18,7 +17,7 @@ read_data <- read_rds("error_data")
 ui <- fluidPage(
    
    # Application title
-   titlePanel("NYT/Upshot Polling Errors in Different Age Groups, 2018 Midterms"),
+   titlePanel("NYT/Upshot Polling Errors in Different Age Groups, 2018 Midterm House Races"),
    
    # Sidebar with a dropdown input for age range and a checbox for line of best fit
    sidebarLayout(
@@ -36,7 +35,16 @@ ui <- fluidPage(
       
       # Show a plot of the generated distribution
       mainPanel(
-         plotOutput("agePlot")
+         plotOutput("agePlot"),
+         HTML(
+           paste(
+             h3("Analysis:"),
+             p("There does not appear to be any clear positive or negative correlation among percentages 
+               of poll respondents in different age groups in races that Democrats won. However, in 
+               races that Republicans won, two different trends are seen. First, in Republican-won races 
+               where there was a particularly low percentage of 18-34 year-olds polled, poll accuracy tended to be 
+               lower. Meanwhile, higher perentages of poll respondents in the 35-49 age group and the 50-64 
+               age group were associated with lower poll accuracies in Republican-won races.")))
       )
    )
 )
@@ -58,7 +66,8 @@ server <- function(input, output) {
          ggplot(aes(x = yngst_per, y = accuracy, color = win_party)) +
          geom_point() +
          # labels
-         labs(x = "Percentage of sample aged between 18 and 34", 
+         labs(subtitle = "Accuracy is 100 minus the absolute value of the poll error",
+                x = "Percentage of sample aged between 18 and 34", 
               y = "Accuracy of Poll", color = "Winning Party") +
          # linking the Democrat with the color blue and the Republican Races with red
          scale_color_manual(values=c("#0000FF", "#FF0000")) 
@@ -78,7 +87,8 @@ server <- function(input, output) {
          ggplot(aes(x = yngr_per, y = accuracy, color = win_party)) +
          geom_point() +
          # labels
-         labs(x = "Percentage of sample aged between 35 and 49", 
+         labs(subtitle = "Accuracy is 100 minus the absolute value of the poll error",
+              x = "Percentage of sample aged between 35 and 49", 
               y = "Accuracy of Poll", color = "Winning Party") +
          # linking the Democrat with the color blue and the Republican Races with red
          scale_color_manual(values=c("#0000FF", "#FF0000"))
@@ -98,7 +108,8 @@ server <- function(input, output) {
          ggplot(aes(x = oldr_per, y = accuracy, color = win_party)) +
          geom_point() +
          # labels
-         labs(x = "Percentage of sample aged between 50 and 64", 
+         labs(subtitle = "Accuracy is 100 minus the absolute value of the poll error",
+              x = "Percentage of sample aged between 50 and 64", 
               y = "Accuracy of Poll", color = "Winning Party") +
          # linking the Democrat with the color blue and the Republican Races with red
          scale_color_manual(values=c("#0000FF", "#FF0000"))
@@ -118,7 +129,8 @@ server <- function(input, output) {
          ggplot(aes(x = oldst_per, y = accuracy, color = win_party)) +
          geom_point() +
          # labels
-         labs(x = "Percentage of sample older than 65", 
+         labs(subtitle = "Accuracy is 100 minus the absolute value of the poll error",
+              x = "Percentage of sample older than 65", 
               y = "Accuracy of Poll", color = "Winning Party") +
          # linking the Democrat with the color blue and the Republican Races with red
          scale_color_manual(values=c("#0000FF", "#FF0000"))
@@ -131,8 +143,11 @@ server <- function(input, output) {
          print(bf_line)
        }
      }
-   })
+   }
+)
 }
+
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
