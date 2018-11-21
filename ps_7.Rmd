@@ -18,6 +18,8 @@ library(stringr)
 ```
 
 ```{r echo=FALSE}
+# some of the work in cleaning up the data and downloading the data was carried over from my second midterm
+
 # reading in the data from the csv file I have downloaded from the internet (posted on Piazza by Jack Schroeder)
 results <- read_csv("mt_2_results.csv") %>% 
   # getting rid of senate and governor's races. I want to focus on what  led to polling errors in house races, which are just so much smaller and different than statewide races like Governor and Senate racesps

@@ -39,8 +39,8 @@ ui <- fluidPage(
          HTML(
            paste(
              h3("Analysis:"),
-             p("There does not appear to be any clear positive or negative correlation among percentages 
-               of poll respondents in different age groups in races that Democrats won. However, in 
+             p("There appears to neither be a clear positive nor negative correlation between percentages 
+               of poll respondents in specific age groups and polling errors in races that Democrats won. However, in 
                races that Republicans won, two different trends are seen. First, in Republican-won races 
                where there was a particularly low percentage of 18-34 year-olds polled, poll accuracy tended to be 
                lower. Meanwhile, higher perentages of poll respondents in the 35-49 age group and the 50-64 
