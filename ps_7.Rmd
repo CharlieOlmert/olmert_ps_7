@@ -1,0 +1,84 @@
+---
+title: "ps_7"
+author: "Charlie Olmert"
+date: "11/20/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(fs)
+library(knitr)
+library(scales)
+library(stringr)
+```
+
+```{r echo=FALSE}
+# reading in the data from the csv file I have downloaded from the internet (posted on Piazza by Jack Schroeder)
+results <- read_csv("mt_2_results.csv") %>% 
+  # getting rid of senate and governor's races. I want to focus on what  led to polling errors in house races, which are just so much smaller and different than statewide races like Governor and Senate racesps
+  filter(district != "gov",
+         district != "sen") %>% 
+  # concatenating state and district into one string so that districts that are the same number in different states are distinguishable from one another
+  mutate(key = paste(state, district, sep = "")) %>% 
+  # calculating Dem percentage lead in the vote in all of the data
+  mutate(dem_adv_result = (dem_votes - rep_votes) / (rep_votes + dem_votes + other_votes))
+
+# downloading Upshot data from the link provided for midterm 2
+download.file(url = "https://goo.gl/ZRCBda", 
+              destfile = "master.zip",
+              quiet = TRUE,
+              mode = "wb")
+
+# unzipping the zip file
+unzip("master.zip")
+
+# saving all of the file names in order to quickly read in all of the data
+file_names <- dir_ls("2018-live-poll-results-master/data/")
+
+# reading in each file using read_csv and saving its source
+polls <- map_dfr(file_names, read_csv, .id = "source")
+
+# deleting the zipfile
+file_delete("master.zip")
+
+adj_polls <- polls %>% 
+  # creating new columns to hold state, district, and wave information
+  mutate(state = str_sub(source, 51, 52),
+         district = str_sub(source, 53, 54),
+         wave = str_sub(source, 56, 56)) %>% 
+  # getting rid of senate and governor's races to match the house races I have in the results data
+  filter(district != "go",
+         district != "se") %>% 
+  # concatenating state and district into one string, key
+  mutate(key = paste(state, district, sep = "")) %>% 
+  # renaming key variable so that it matches other data
+  mutate(key = str_to_upper(key)) %>% 
+   # grouping by source and response and key and wave, which makes it so each poll sticks together and keeps the key variable around
+  group_by(source, response, key, wave) %>% 
+  # finds the total weight, meaning the weight given to each respondent, then adds all of those weights for each group 
+  summarise(weights = sum(final_weight)) %>% 
+  # reorganized data so that each response becomes a column with weights as the values below
+  spread(response, weights) %>% 
+  # changes NA's to zero's. Found online at: https://stackoverflow.com/questions/10139284/set-na-to-0-in-r
+  mutate_all(funs(ifelse(is.na(.), 0, .))) %>% 
+  # calculating the Dem advantage in final weight
+  mutate(dem_adv_poll = (Dem - Rep) / (Dem + Rep + Und + `3` + `4` + `5` + `6`))
+
+res_adj <- results %>% 
+  # renaming key variable for matching purposes
+  mutate(key = str_to_upper(key)) %>% 
+  # joining together results with polled house races
+  inner_join(adj_polls, by = "key") %>% 
+  # finding the difference between the resulting Democratic advantage and the polled Democratic advantage (the polling error), then multiplying and rounding that error so that it is a percentage
+  mutate(error = dem_adv_result - dem_adv_poll,
+         error = round(100 * error, digits = 2))
+
+# writing data onto a file to be used for Shiny app
+write_rds(res_adj, path = "ps_7/error_data")
+```
+
